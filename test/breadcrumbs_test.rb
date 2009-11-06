@@ -1,62 +1,81 @@
 require File.join(File.dirname(__FILE__), 'test_helper')
 
 class Node < ActiveRecord::Base
-  acts_as_tree  # need this
+  acts_as_nested_set  # need this
   acts_as_breadcrumbs
 end
 
 class Location < ActiveRecord::Base
-  acts_as_tree  # need this
-  acts_as_breadcrumbs(:attr => :location_string)
+  acts_as_nested_set  # need this
+  acts_as_breadcrumbs :location_string
 end
 
 class Soldier < ActiveRecord::Base
-  acts_as_tree  # need this
-  acts_as_breadcrumbs(:attr => :chain_o_command, :separator => " > ", :include_root => false)
+  acts_as_nested_set  # need this
+  acts_as_breadcrumbs :chain_o_command, :separator => " > ", :include_root => false
 end
 
 class WebPage < ActiveRecord::Base
-  acts_as_tree  # need this
-  acts_as_breadcrumbs(:attr => :url, :basename => :slug, :separator => "/")
-  acts_as_breadcrumbs(:basename => :title, :separator => "&nbsp;&gt;&nbsp;")
+  acts_as_nested_set  # need this
+  acts_as_breadcrumbs :url, :basename => :slug, :separator => "/"
+  acts_as_breadcrumbs :basename => :title, :separator => "&nbsp;&gt;&nbsp;"
+
+  def slug
+    title.parameterize.to_s
+  end
 end
 
 class BreadcrumbsTest < Test::Unit::TestCase
-  fixtures :nodes, :locations, :soldiers, :web_pages
-
   def test_no_options
-    nodes(:node_3).save
-    assert_equal "Root:Level 1:Level 2", nodes(:node_3).breadcrumbs    
+    root = Node.create(:name => "Root")
+    child1 = root.children.create(:name => "Level 1")
+    child2 = child1.children.create(:name => "Level 2")
+    root2 = Node.create(:name => "Root 2")
+
+    assert_equal "Root:Level 1:Level 2", child2.breadcrumbs    
   end
 
   def test_alternate_attribute
-    locations(:location_3).save
-    assert_equal "HQ:FL01:RM03", locations(:location_3).location_string
+    root = Location.create(:name => "HQ")
+    child1 = root.children.create(:name => "FL01")
+    child2 = child1.children.create(:name => "RM03")
+
+    assert_equal "HQ:FL01:RM03", child2.location_string
   end
 
   def test_basename
-    web_pages(:web_page_3).save
-    assert_equal "foo/bar/baz", web_pages(:web_page_3).url
+    root = WebPage.create(:title => "Foo")
+    child1 = root.children.create(:title => "Bar")
+    child2 = child1.children.create(:title => "Baz")
+
+    assert_equal "foo/bar/baz", child2.url
   end
 
   def test_separator
-    soldiers(:soldier_4).save
-    assert_equal "General Hailstone > Colonel Stanley > LTC Mueller", soldiers(:soldier_4).chain_o_command
+    root = Soldier.create(:name => "President Paul")
+    child1 = root.children.create(:name => "General Hailstone")
+    child2 = child1.children.create(:name => "Colonel Stanley")
+    child3 = child2.children.create(:name => "LTC Mueller")
+
+    assert_equal "General Hailstone > Colonel Stanley > LTC Mueller", child3.chain_o_command
   end
 
   def test_include_root
-    locations(:location_1).save
-    assert_equal "HQ", locations(:location_1).location_string    
+    root = Location.create(:name => "HQ")
+    assert_equal "HQ", root.location_string    
   end
 
   def test_not_include_root
-    soldiers(:soldier_1).save
-    assert_equal "", soldiers(:soldier_1).chain_o_command
+    root = Soldier.create(:name => "President Paul")
+    assert_equal "", root.chain_o_command
   end
 
   def test_two_breadcrumbs
-    web_pages(:web_page_3).save
-    assert_equal "foo/bar/baz", web_pages(:web_page_3).url
-    assert_equal "Foo&nbsp;&gt;&nbsp;Bar&nbsp;&gt;&nbsp;Baz", web_pages(:web_page_3).breadcrumbs
+    root = WebPage.create(:title => "Foo")
+    child1 = root.children.create(:title => "Bar")
+    child2 = child1.children.create(:title => "Baz")
+
+    assert_equal "foo/bar/baz", child2.url
+    assert_equal "Foo&nbsp;&gt;&nbsp;Bar&nbsp;&gt;&nbsp;Baz", child2.breadcrumbs
   end
 end

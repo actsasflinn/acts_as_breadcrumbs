@@ -1,29 +1,43 @@
 ActiveRecord::Schema.define(:version => 1) do
-
   create_table :nodes, :force => true do |t|
-    t.column :parent_id, :integer
-    t.column :name, :string
-    t.column :breadcrumbs, :string
+    t.string :name
+    t.string :breadcrumbs
+
+    # nested_set
+    t.integer :parent_id
+    t.integer :lft
+    t.integer :rgt
   end
 
   create_table :locations, :force => true do |t|
-    t.column :parent_id, :integer
-    t.column :name, :string
-    t.column :location_string, :string
+    t.string :name
+    t.string :location_string
+
+    # nested_set
+    t.integer :parent_id
+    t.integer :lft
+    t.integer :rgt
   end
 
   create_table :soldiers, :force => true do |t|
-    t.column :parent_id, :integer
-    t.column :name, :string
-    t.column :chain_o_command, :string
+    t.string :name
+    t.string :chain_o_command
+
+    # nested_set
+    t.integer :parent_id
+    t.integer :lft
+    t.integer :rgt
   end
 
   create_table :web_pages, :force => true do |t|
-    t.column :parent_id, :integer
-    t.column :title, :string
-    t.column :slug, :string
-    t.column :url, :string
-    t.column :breadcrumbs, :string
-  end
+    t.string :title
+    t.string :slug
+    t.string :url
+    t.string :breadcrumbs
 
+    # nested_set
+    t.integer :parent_id
+    t.integer :lft
+    t.integer :rgt
+  end
 end
